@@ -1,5 +1,5 @@
 # qSMLM
-qSMLMS a tool for modeling single molecule localization microscopy blinking kinetics
+qSMLM a tool for modeling single molecule localization microscopy blinking kinetics
 
 The code is based upon the work of Hummer et al. 2015
 
