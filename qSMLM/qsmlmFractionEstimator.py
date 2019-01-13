@@ -9,9 +9,9 @@ import numpy as np
 from scipy import stats
 from scipy.optimize import minimize
 from scipy.optimize import curve_fit
-import qsmlmModel
-import qsmlmData
-import qsmlmModelEvaluator
+from .import qsmlmModel
+from . import qsmlmData
+from . import qsmlmModelEvaluator
 
 
 class QsmlmFractionEstimator:
