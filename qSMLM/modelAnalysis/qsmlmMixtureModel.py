@@ -10,7 +10,7 @@ from scipy.optimize import fsolve
 from datetime import datetime
 
 
-class QsmlmModel:
+class QsmlmMixtureModel:
 # Init Model
     def __init__(self):
         print("qsmlmModel initialized")
@@ -123,7 +123,7 @@ class QsmlmModel:
         print('\n')
         
     def saveModel(self):
-        outFileName = self.folderName + '/' + str(self.date) + '-' + self.baseName + '_model.txt'
+        outFileName = self.folderName + '/' + str(self.date) + '-' + self.baseName +'_model.txt'
         outFile = open(outFileName, "w")
         outFile.write("# qSMLM modeling statistics")
         outFile.write("\n# photo physical parameters:")
@@ -145,4 +145,4 @@ class QsmlmModel:
         outFile.write("\nAIC:\t%.5f"% (self.aic))
         outFile.write("\nAICc:\t%.5f"% (self.aicc))
         outFile.close()
-        print('\nModeling statistics written to ' + str(self.date) + '-' + self.baseName + '-fit-statistics.txt')
+        print('\nModeling statistics written to ' + str(self.date) + '-' + self.baseName + '_model.txt')

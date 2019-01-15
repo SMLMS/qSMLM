@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Oct 31 14:08:48 2018
+Created on Thu Nov  1 10:04:29 2018
 
 @author: malkusch
 """
@@ -9,35 +9,37 @@ import numpy as np
 from scipy import stats
 from scipy.optimize import minimize
 from scipy.optimize import curve_fit
-from . import qsmlmModel
-from . import qsmlmData
-from . import qsmlmModelEvaluator
+from ..modelAnalysis import qsmlmMixtureModel
+from ..data import qsmlmData
+from ..modelAnalysis import qsmlmModelEvaluator
 
 
-class QsmlmPEstimator:
+class QsmlmFractionEstimator:
 # Init Model
     def __init__(self):
         print("qsmlmPEstimator initialized")
-        self.model = qsmlmModel.QsmlmModel()
+        self.model = qsmlmMixtureModel.QsmlmMixtureModel()
         self.evaluator = qsmlmModelEvaluator.QsmlmModelEvaluator()
         self.data = qsmlmData.QsmlmData()
         self.folderName = 'None'
         self.baseName = 'None'
     
-    def initQsmlmModel(self, initP):
-        states = [0]
-        weight = [1.0]
-        d = 1.0
-        self.model.setModelParameters(d, initP, states, weight)
+    def initQsmlmModel(self, d, p, states, initWeight):
+        self.model.setModelParameters(d, p, states, initWeight)
         self.model.printModel()
-
+    
     # fit function
-    def pdf(self, n, p):
-        return self.model.pdfSuperPos(n, 1.0, p, self.model.weight)
+    def pdf(self, n, *w):
+        if (len(np.shape(w))>1):
+            w=w[0]
+        weight=[]
+        for a in w:
+            weight.append(a)
+        return self.model.pdfSuperPos(n, self.model.d, self.model.p, weight)
 
     # parameter Estimation      
-    def negLogLikelihood(self, p, n, yData):
-        yPred = self.pdf(n,p)
+    def negLogLikelihood(self, weight, n, yData):
+        yPred = self.pdf(n,weight)
         sd = np.std(yPred-yData)
         ll = -np.sum(stats.norm.logpdf(yData, loc=yPred, scale=sd))
         return ll
@@ -45,20 +47,18 @@ class QsmlmPEstimator:
     def mleOptimization(self):
         b = [[0.0, 1.0]]
         boundaries = []
-        for i in range (1):
+        for i in range (self.model.complexity):
             boundaries.extend(b)
         result = minimize(self.negLogLikelihood, # function to minimize
-                          x0 = self.model.p, #initial parameters
+                          x0 = self.model.weight, #initial parameters
                           args = (self.data.data[:,0], self.data.data[:,1]), # data
                           method = 'L-BFGS-B', #minimization method, see docs
                           bounds = boundaries,
                           options = {'disp': True})
-        if (result.success == True):
-            self.model.p = result.x[0]
-            self.updateModel()
-            self.evaluateModel()
-            self.model.printModel()
-            print('fitting results:')
+        self.model.weight = result.x/np.sum(result.x)
+        self.updateModel()
+        self.evaluateModel()
+        self.model.printModel()
         self.model.baseName = self.baseName + 'mle'
         self.data.baseName = self.baseName + 'mle'
         
@@ -67,29 +67,30 @@ class QsmlmPEstimator:
         lsW, lsCov = curve_fit(f=self.pdf,
                                xdata=self.data.data[:,0],
                                ydata=self.data.data[:,1],
-                               p0 = self.model.p,
+                               p0 = self.model.weight,
                                bounds = boundaries,
                                method='trf')
-        self.model.p = lsW[0]
+        self.model.weight = lsW/np.sum(lsW)
         self.updateModel()
         self.evaluateModel()
         self.model.printModel()
         print('fitting results:')
         print('errors:')
         print(np.diag(lsCov))
-        self.model.baseName = self.baseName + 'ls'
+        self.model.baseName = self.baseName +'ls'
         self.data.baseName = self.baseName + 'ls'
     
     def updateModel(self):
-        self.data.data[:,2] = self.pdf(self.data.data[:,0], self.model.p)
-        self.model.logL = -self.negLogLikelihood(self.model.p, self.data.data[:,0], self.data.data[:,1])
+        self.data.data[:,2] = self.pdf(self.data.data[:,0], self.model.weight)
+        self.model.logL = -self.negLogLikelihood(self.model.weight, self.data.data[:,0], self.data.data[:,1])
         self.data.calcChi2()
         self.model.chi2 = self.data.chi2
         self.data.clacRes()
+        self.model.correctWeightVector()
         
      # Evaluation
     def evaluateModel(self):
-        self.evaluator.para = 1
+        self.evaluator.para = self.model.complexity
         self.evaluator.obs = self.data.eventNumber
         self.evaluator.logL = self.model.logL
         self.evaluator.evaluateModelStatistics()
@@ -97,18 +98,17 @@ class QsmlmPEstimator:
         self.model.aic = self.evaluator.aic
         self.model.aicc = self.evaluator.aicc
     
-    
     # print results
     def printModelStatistics(self):
         self.evaluator.printModelStatistics()
-    
+        
     # load data
     def loadData(self, n, p0):
         self.data.loadFile(n,p0)
         self.model.eventNumber = self.data.eventNumber
         self.folderName = self.data.folderName
         self.model.folderName = self.folderName
-        self.baseName = self.data.baseName + '_p-estimation_'
+        self.baseName = self.data.baseName + '_fraction-estimation_'
         
     # save results
     def saveResults(self):
@@ -119,17 +119,37 @@ class QsmlmPEstimator:
         self.data.plotData()
         self.data.plotResiduals()
         
+    def runAnalysis(self, n=0, p0=1, d=0.8, p=0.3, mV=[0], wV=[1.0], opt="least squares", fileName=""):
+        self.data.setFileName(fileName)
+        self.loadData(n,p0)
+        print("\nInitialized model parameters:")
+        self.initQsmlmModel(d, p, mV, wV)
+        print("\n\nOptimized model parameters:")
+        if (opt == "least squares"):
+            self.lsOptimization()
+        if (opt == "maximum likelihood"):
+            self.mleOptimization()
+        print("\n\nOptimized model statistics:")
+        self.printModelStatistics()
+        self.plotResults()
+        
+        
         
 def main():
     p = 0.2
+    d = 0.824 
+    states = [0,1, 2]
+    weight = [0.5, 0.5, 0.5]
     
-    pEst = QsmlmPEstimator()
-    pEst.initQsmlmModel(p)
+    pEst = QsmlmFractionEstimator()
+    pEst.initQsmlmModel(d, p, states, weight)
     pEst.loadData(0,1)
     pEst.lsOptimization()
     pEst.plotResults()
     pEst.saveResults()
-
+    pEst.mleOptimization()
+    pEst.plotResults()
+    pEst.saveResults()
     
     
 if __name__ == '__main__':

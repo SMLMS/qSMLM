@@ -9,16 +9,16 @@ import numpy as np
 from scipy import stats
 from scipy.optimize import minimize
 from scipy.optimize import curve_fit
-from . import qsmlmModel
-from . import qsmlmData
-from . import qsmlmModelEvaluator
+from ..modelAnalysis import qsmlmMixtureModel
+from ..data import qsmlmData
+from ..modelAnalysis import qsmlmModelEvaluator
 
 
 class QsmlmDEstimator:
 # Init Model
     def __init__(self):
         print("qsmlmPEstimator initialized")
-        self.model = qsmlmModel.QsmlmModel()
+        self.model = qsmlmMixtureModel.QsmlmMixtureModel()
         self.evaluator = qsmlmModelEvaluator.QsmlmModelEvaluator()
         self.data = qsmlmData.QsmlmData()
         self.folderName = 'None'
@@ -121,6 +121,17 @@ class QsmlmDEstimator:
     def plotResults(self):
         self.data.plotData()
         self.data.plotResiduals()
+        
+    def runAnalysis(self, n=0, p0=1, m=1, p=0.3, initD=0.9, fileName=""):
+        self.data.setFileName(fileName)
+        self.loadData(n,p0)
+        print("\nInitialized model parameters:")
+        self.initQsmlmModel(m, initD, p)
+        print("\n\nOptimized model parameters:")
+        self.lsOptimization()
+        print("\n\nOptimized model statistics:")
+        self.printModelStatistics()
+        self.plotResults()
         
         
 def main():

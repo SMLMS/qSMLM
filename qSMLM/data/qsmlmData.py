@@ -7,8 +7,6 @@ Created on Wed Oct 31 10:44:55 2018
 
 import os
 import numpy as np
-import tkinter as tk
-from tkinter.filedialog import askopenfilename
 from datetime import datetime
 import matplotlib.pyplot as plt
 from scipy import stats
@@ -21,27 +19,19 @@ class QsmlmData:
         self.data = []
         self.eventNumber = 0
         self.chi2  = []
-        self.fileName='None'
-        self.folderName = 'None'
-        self.baseName = 'None'
+        self.fileName=''
+        self.folderName = ''
+        self.baseName = ''
         self.time = datetime.now()
         self.date = self.time.date()
 
     # File Import    
-    def openFile(self):
-        root = tk.Tk()
-        root.withdraw()
-        root.update()
-        root.name = askopenfilename(title="import blinking histogram", filetypes=(("text files", "*.txt"),
-                                       ("All files", "*.*") ))
-        self.fileName = root.name
+    def setFileName(self, fileName=""):
+        self.fileName = str(fileName)
         self.folderName = os.path.dirname(self.fileName)
         self.baseName = os.path.basename(self.fileName)[:-4]
-        root.update()
-        root.destroy()
     
     def loadFile(self, n,p):
-        self.openFile()
         if self.fileName :
             blinkHist = np.loadtxt(self.fileName, comments='#', delimiter='\t', skiprows=0, usecols=(n,p))
             self.data = np.zeros([np.shape(blinkHist)[0], 4])
@@ -68,10 +58,10 @@ class QsmlmData:
         print(self.data)
     
     def saveData(self):
-        outFileName = self.folderName + '/' + str(self.date) + '-' + self.baseName + '-fit.txt'
-        h = ("qSMLM modeling results\tchi^2 = %.5f \nn\tp\tmodel\tres"% (self.chi2[0]))
+        outFileName = self.folderName + '/' + str(self.date) + '-' + self.baseName + '_fit.txt'
+        h = ("qSMLM modeling results\tchi^2 = %.5f \nn\tp0\tmodel\tres"% (self.chi2[0]))
         np.savetxt(outFileName, self.data, fmt=['%i', '%.5e', '%.5e', '%.5e'],header = h, comments='#')
-        print('\nLS-based modeling results written to ' + str(self.date) + '-' + self.baseName + '_fit-result.txt')
+        print('\nLS-based modeling results written to ' + str(self.date) + '-' + self.baseName + '_fit.txt')
         
     def plotData(self):
         fig = plt.figure()

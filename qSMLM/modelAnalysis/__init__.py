@@ -6,4 +6,6 @@ Created on Sun Jan 13 14:50:17 2019
 @author: malkusch
 """
 
-name = "qSMLM"
+__all__=["qsmlmMixtureModel",
+         "qsmlmFrectionEstimator",
+         "qsmlmModelEvaluator"]
