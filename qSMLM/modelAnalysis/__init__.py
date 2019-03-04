@@ -7,5 +7,5 @@ Created on Sun Jan 13 14:50:17 2019
 """
 
 __all__=["qsmlmMixtureModel",
-         "qsmlmFrectionEstimator",
+         "qsmlmFractionEstimator",
          "qsmlmModelEvaluator"]

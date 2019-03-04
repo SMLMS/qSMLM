@@ -38,10 +38,17 @@ class QsmlmFractionEstimator:
         return self.model.pdfSuperPos(n, self.model.d, self.model.p, weight)
 
     # parameter Estimation      
-    def negLogLikelihood(self, weight, n, yData):
-        yPred = self.pdf(n,weight)
-        sd = np.std(yPred-yData)
-        ll = -np.sum(stats.norm.logpdf(yData, loc=yPred, scale=sd))
+# =============================================================================
+#     def negLogLikelihood(self, weight, n, yData):
+#         yPred = self.pdf(n,weight)
+#         sd = np.std(yPred-yData)
+#         ll = -np.sum(stats.norm.logpdf(yData, loc=yPred, scale=sd))
+#         return ll
+# =============================================================================
+    
+    def negLogLikelihood(self, p, n, yData):
+        yPred = self.pdf(n,p)
+        ll = -np.sum(np.multiply(yData*self.data.eventNumber, np.log(yPred)))
         return ll
              
     def mleOptimization(self):
@@ -90,7 +97,7 @@ class QsmlmFractionEstimator:
         
      # Evaluation
     def evaluateModel(self):
-        self.evaluator.para = self.model.complexity
+        self.evaluator.para = self.model.complexity-1
         self.evaluator.obs = self.data.eventNumber
         self.evaluator.logL = self.model.logL
         self.evaluator.evaluateModelStatistics()

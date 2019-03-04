@@ -36,10 +36,17 @@ class QsmlmPEstimator:
         return self.model.pdfSuperPos(n, 1.0, p, self.model.weight)
 
     # parameter Estimation      
+# =============================================================================
+#     def negLogLikelihood(self, p, n, yData):
+#         yPred = self.pdf(n,p)
+#         sd = np.std(yPred-yData)
+#         ll = -np.sum(stats.norm.logpdf(yData, loc=yPred, scale=sd))
+#         return ll
+# =============================================================================
+
     def negLogLikelihood(self, p, n, yData):
         yPred = self.pdf(n,p)
-        sd = np.std(yPred-yData)
-        ll = -np.sum(stats.norm.logpdf(yData, loc=yPred, scale=sd))
+        ll = -np.sum(np.multiply(yData, np.log(yPred)))
         return ll
              
     def mleOptimization(self):
@@ -125,7 +132,8 @@ class QsmlmPEstimator:
         print("\nInitialized model parameters:")
         self.initQsmlmModel(initP)
         print("\n\nOptimized model parameters:")
-        self.lsOptimization()
+        #self.lsOptimization()
+        self.mleOptimization()
         print("\n\nOptimized model statistics:")
         self.printModelStatistics()
         self.plotResults()
