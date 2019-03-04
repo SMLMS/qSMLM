@@ -46,8 +46,8 @@ class QsmlmDEstimator:
 #         return ll
 # =============================================================================
     
-    def negLogLikelihood(self, p, n, yData):
-        yPred = self.pdf(n,p)
+    def negLogLikelihood(self, d, n, yData):
+        yPred = self.pdf(n,d)
         ll = -np.sum(np.multiply(yData, np.log(yPred)))
         return ll
              

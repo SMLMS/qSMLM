@@ -12,7 +12,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="qSMLM",
-    version="19.01",
+    version="19.03",
     author="Sebastian Malkusch",
     author_email="malkusch@chemie.uni-frankfurt.com",
     description="a package for modeling single molecule localization microscopy blinking kinetics",
