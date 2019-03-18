@@ -24,7 +24,8 @@ setuptools.setup(
 						'matplotlib',
 						'scipy',
 						'IPython',
-						'ipywidgets'],
+						'ipywidgets',
+						'hide_code'],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GPL-3.0 License",
